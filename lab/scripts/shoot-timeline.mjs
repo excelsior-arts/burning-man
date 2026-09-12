@@ -1,0 +1,16 @@
+import {chromium} from '@playwright/test';
+const dir = (process.env.OUT ?? 'artifacts');
+const browser = await chromium.launch({headless: true, channel: 'chromium', args: ['--enable-unsafe-webgpu', '--ignore-gpu-blocklist']});
+const page = await browser.newPage({ignoreHTTPSErrors: true, viewport: {width: 1280, height: 820}});
+const errors = []; page.on('pageerror', (e) => errors.push(e.message));
+await page.goto((process.env.URL ?? 'https://127.0.0.1:5180') + '/?quality=low');
+await page.locator('#start:not([disabled])').waitFor({timeout: 120000});
+await page.locator('#author-toggle').click();
+await page.waitForTimeout(900);
+const labels = await page.evaluate(() => [...document.querySelectorAll('#timeline-cues button')].map((b) => b.textContent));
+console.log('marks on the timeline:', labels.length);
+for (const l of labels) console.log('  ' + l);
+const box = await page.locator('#author-timeline').boundingBox();
+if (box) await page.screenshot({path: `${dir}/timeline.png`, clip: {x: box.x, y: box.y, width: box.width, height: box.height}});
+console.log('errors:', errors.length ? errors : 'none');
+await browser.close();

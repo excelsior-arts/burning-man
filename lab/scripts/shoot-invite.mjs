@@ -1,0 +1,30 @@
+import {chromium, devices} from '@playwright/test';
+const dir = (process.env.OUT ?? 'artifacts');
+const browser = await chromium.launch({headless: true, channel: 'chromium', args: ['--enable-unsafe-webgpu', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required']});
+const errors = [];
+// A desk: the button, the button under the pointer, then the keys he is offered.
+const desk = await browser.newPage({ignoreHTTPSErrors: true, viewport: {width: 1100, height: 760}});
+desk.on('pageerror', (e) => errors.push(e.message));
+await desk.goto((process.env.URL ?? 'https://127.0.0.1:5180') + '/?quality=low');
+await desk.locator('#start:not([disabled])').waitFor({timeout: 120000});
+await desk.screenshot({path: `${dir}/invite-rest.png`, clip: {x: 400, y: 320, width: 300, height: 130}});
+await desk.locator('#start').hover();
+await desk.waitForTimeout(500);
+await desk.screenshot({path: `${dir}/invite-hover.png`, clip: {x: 400, y: 320, width: 300, height: 130}});
+await desk.locator('#start').click();
+await desk.waitForFunction(() => window.burning.snapshot().time > 10, null, {timeout: 60000});
+await desk.waitForTimeout(900);
+await desk.screenshot({path: `${dir}/invite-hint-keys.png`, clip: {x: 180, y: 630, width: 740, height: 120}});
+// A tablet: no hover, coarse pointer.
+const touch = await browser.newContext({ignoreHTTPSErrors: true, ...devices['iPad (gen 7) landscape']});
+const pad = await touch.newPage();
+pad.on('pageerror', (e) => errors.push(e.message));
+await pad.goto((process.env.URL ?? 'https://127.0.0.1:5180') + '/?quality=low');
+await pad.locator('#start:not([disabled])').waitFor({timeout: 120000});
+await pad.locator('#start').tap();
+await pad.waitForFunction(() => window.burning.snapshot().time > 10, null, {timeout: 60000});
+await pad.waitForTimeout(900);
+const box = pad.viewportSize();
+await pad.screenshot({path: `${dir}/invite-hint-touch.png`, clip: {x: 100, y: box.height - 130, width: box.width - 200, height: 110}});
+console.log('errors:', errors.length ? errors : 'none');
+await browser.close();

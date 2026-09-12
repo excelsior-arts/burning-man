@@ -1,0 +1,17 @@
+import {chromium} from '@playwright/test';
+const dir = (process.env.OUT ?? 'artifacts');
+const tag = process.argv[2] ?? 'now';
+const browser = await chromium.launch({headless: true, channel: 'chromium', args: ['--enable-unsafe-webgpu', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required']});
+const page = await browser.newPage({ignoreHTTPSErrors: true, viewport: {width: 1800, height: 800}});
+const errors = []; page.on('pageerror', (e) => errors.push(e.message));
+await page.goto((process.env.URL ?? 'https://127.0.0.1:5180') + '/?quality=high');
+await page.locator('#start:not([disabled])').waitFor({timeout: 120000});
+await page.locator('#start').click();
+await page.waitForTimeout(700);
+await page.evaluate(() => window.burning.seek(168));
+await page.waitForTimeout(1600);
+await page.mouse.move(900, 500); await page.mouse.down(); await page.mouse.move(900, 300, {steps: 12}); await page.mouse.up();
+await page.waitForTimeout(1600);
+await page.screenshot({path: `${dir}/dusk-sky-${tag}.png`});
+console.log('errors:', errors.length ? errors : 'none');
+await browser.close();

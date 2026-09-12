@@ -1,0 +1,59 @@
+{
+  "name": "burning-man",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "test": "vitest run",
+    "test:slow": "SLOW=1 vitest run",
+    "test:score": "vitest run lab/tests/experience.test.ts lab/tests/director.test.ts lab/tests/camera-director.test.ts lab/tests/walking-controls.test.ts",
+    "score:check": "node lab/scripts/score-check.mjs",
+    "preview": "vite preview",
+    "build:runtime": "vite build --config vite.runtime.config.ts && tsc -p tsconfig.runtime.json",
+    "build:author": "tsc --noEmit && vite build --mode author",
+    "test:experience": "node lab/tests/experience-browser.mjs",
+    "test:browser": "node lab/tests/experience-browser.mjs",
+    "test:audio": "node lab/tests/audio-browser.mjs",
+    "test:presentation": "node lab/tests/presentation-browser.mjs",
+    "check:release": "node lab/scripts/check-release.mjs",
+    "test:sand": "node lab/tests/sand-browser.mjs",
+    "test:desert": "node lab/tests/desert-browser.mjs",
+    "test:idle": "node lab/tests/render-idle-browser.mjs",
+    "test:quality": "node lab/tests/quality-browser.mjs",
+    "test:performance": "node lab/tests/performance-browser.mjs",
+    "test:map": "node lab/tests/map-browser.mjs",
+    "test:horizon": "node lab/tests/horizon-browser.mjs",
+    "test:reflections": "node lab/tests/reflection-browser.mjs",
+    "test:footprints": "node lab/tests/footprints-browser.mjs",
+    "test:sky": "node lab/tests/sky-browser.mjs",
+    "test:music": "node lab/tests/music-browser.mjs",
+    "test:heartbeat": "node lab/tests/heartbeat-browser.mjs",
+    "test:water-readback": "node lab/tests/water-readback-browser.mjs"
+  },
+  "dependencies": {
+    "three": "0.185.1",
+    "threejs-water-pro": "file:../threejs-water-pro"
+  },
+  "devDependencies": {
+    "@gltf-transform/core": "^4.5.0",
+    "@gltf-transform/extensions": "^4.5.0",
+    "@gltf-transform/functions": "^4.5.0",
+    "@playwright/test": "^1.62.1",
+    "@types/three": "0.185.4",
+    "typescript": "6.0.3",
+    "vite": "8.2.2",
+    "vitest": "4.1.11"
+  },
+  "exports": {
+    "./runtime": {
+      "types": "./dist-runtime/character/index.d.ts",
+      "import": "./dist-runtime/index.js"
+    },
+    "./sand": {
+      "types": "./dist-runtime/sand/index.d.ts",
+      "import": "./dist-runtime/sand.js"
+    }
+  }
+}

@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en" class="loading">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- `viewport-fit=cover` is what makes the safe-area insets real, so the
+         piece can reach the edges of a phone and the writing still keeps clear
+         of the notch and the home indicator. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#000000" />
+    <!-- Safari on a phone has no fullscreen to offer a page. Kept on the home
+         screen it has no browser around it at all, which is the same thing and
+         the only way to get it. -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Burning Man" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="icon-180.png" />
+    <link rel="icon" href="data:," />
+    <title>Burning Man 2026</title>
+    <meta
+      name="description"
+      content="An interactive audiovisual experience. Slow down a bit and let it go."
+    />
+    <!-- A link preview never runs the piece, so it is handed one frame of it. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Burning Man 2026" />
+    <meta property="og:description" content="An interactive audiovisual experience. Slow down a bit and let it go." />
+    <meta property="og:url" content="https://excelsior-arts.github.io/burning-man/" />
+    <meta property="og:image" content="https://excelsior-arts.github.io/burning-man/share.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="2400" />
+    <meta property="og:image:height" content="1260" />
+    <meta
+      property="og:image:alt"
+      content="A burning figure walking a dark dune at dusk, the desert behind him"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Burning Man 2026" />
+    <meta name="twitter:description" content="An interactive audiovisual experience. Slow down a bit and let it go." />
+    <meta name="twitter:image" content="https://excelsior-arts.github.io/burning-man/share.jpg" />
+    <style>
+      html {
+        background: #000000;
+        color: #f2eade;
+      }
+      body {
+        margin: 0;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      html.loading body > :not(#loading-screen) {
+        visibility: hidden;
+      }
+      #loading-screen {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 22px;
+        background: #000000;
+        font:
+          12px 'Helvetica Neue',
+          Arial,
+          sans-serif;
+        letter-spacing: 0.16em;
+      }
+      #loading-status {
+        margin: 0;
+      }
+      #loading-status.visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+      }
+      #loading-spinner {
+        position: relative;
+        width: 32px;
+        height: 32px;
+      }
+      .loading-element {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        opacity: 0;
+        animation: elemental-turn 5s ease-in-out infinite;
+      }
+      .loading-element:nth-child(2) {
+        animation-delay: -4s;
+      }
+      .loading-element:nth-child(3) {
+        animation-delay: -3s;
+      }
+      .loading-element:nth-child(4) {
+        animation-delay: -2s;
+      }
+      .loading-element:nth-child(5) {
+        animation-delay: -1s;
+      }
+      #loading-retry {
+        padding: 12px 22px;
+        border: 1px solid #f2eade60;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+      }
+      @keyframes elemental-turn {
+        0%,
+        12%,
+        100% {
+          opacity: 1;
+          transform: rotate(0) scale(1);
+        }
+        20% {
+          opacity: 0;
+          transform: rotate(50deg) scale(0.65);
+        }
+        21%,
+        92% {
+          opacity: 0;
+          transform: rotate(-50deg) scale(0.65);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .loading-element {
+          animation: none;
+        }
+        .loading-element:first-child {
+          opacity: 1;
+        }
+      }
+    </style>
+    <script type="module" crossorigin src="./assets/index-BS_hGhPJ.js"></script>
+  </head>
+  <body aria-busy="true">
+    <div id="loading-screen" role="status" aria-live="polite">
+      <span id="loading-spinner" aria-hidden="true">
+        <svg class="loading-element" viewBox="0 0 32 32" focusable="false">
+          <circle cx="16" cy="16" r="10" />
+        </svg>
+        <svg class="loading-element" viewBox="0 0 32 32" focusable="false">
+          <path d="M16 5 28 26H4Z" />
+        </svg>
+        <svg class="loading-element" viewBox="0 0 32 32" focusable="false">
+          <path d="M5 10c7-6 15 6 22 0M5 16c7-6 15 6 22 0M5 22c7-6 15 6 22 0" />
+        </svg>
+        <svg class="loading-element" viewBox="0 0 32 32" focusable="false">
+          <path d="M5 13a11 11 0 0 0 22 0M7 10c6-4 12 4 18 0" />
+        </svg>
+        <svg class="loading-element" viewBox="0 0 32 32" focusable="false">
+          <path d="m16 4 12 12-12 12L4 16Z" />
+        </svg>
+      </span>
+      <p id="loading-status" class="visually-hidden">Loading</p>
+      <button id="loading-retry" type="button" hidden>Try again</button>
+      <noscript>
+        <style>
+          #loading-spinner,
+          #loading-status {
+            display: none;
+          }
+        </style>
+        <p>Enable JavaScript to enter.</p>
+      </noscript>
+    </div>
+    <canvas id="world" aria-label="A man in a desert of moving sand"></canvas>
+    <header class="masthead">
+      <span class="wordmark">BURNING MAN 2026</span>
+      <div class="transport">
+        <button id="pause" type="button" aria-label="Pause" title="Pause">
+          <svg
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+            fill="currentColor"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="M7 5h3v14H7zM14 5h3v14h-3z" />
+          </svg>
+        </button>
+        <output id="progress" role="timer" aria-live="off" aria-label="Time remaining">2:30</output>
+      </div>
+    </header>
+    <main id="invitation">
+      <h1>BURNING MAN 2026</h1>
+      <button id="start" type="button" disabled aria-busy="true">Let it</button>
+    </main>
+    <!-- Said once, a few seconds after he catches, then gone. The keys are only
+         offered to something that has keys; a touch screen is told about touch. -->
+    <p class="hint" id="hint" aria-live="polite"></p>
+    <!-- The credits arrive once the fire and the ocean have the place to
+         themselves, and leave again the moment a seek puts him back on his feet. -->
+    <footer class="credits"></footer>
+  </body>
+</html>

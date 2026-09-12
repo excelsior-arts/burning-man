@@ -1,0 +1,20 @@
+import {chromium} from '@playwright/test';
+const dir = (process.env.OUT ?? 'artifacts');
+const tag = process.argv[2] ?? 'now';
+const browser = await chromium.launch({headless: true, channel: 'chromium', args: ['--enable-unsafe-webgpu', '--ignore-gpu-blocklist']});
+const page = await browser.newPage({ignoreHTTPSErrors: true, viewport: {width: 1400, height: 560}});
+const errors = []; page.on('pageerror', (e) => errors.push(e.message));
+await page.goto((process.env.URL ?? 'https://127.0.0.1:5180') + '/?quality=high');
+await page.locator('#start:not([disabled])').waitFor({timeout: 120000});
+await page.addStyleTag({content: '#world{pointer-events:auto!important}'});
+await page.locator('#start').click();
+await page.waitForTimeout(600);
+await page.evaluate(() => window.burning.seek(150));
+await page.waitForTimeout(1200);
+// tilt up to the sky
+await page.mouse.move(700, 480); await page.mouse.down(); await page.mouse.move(700, 150, {steps: 14}); await page.mouse.up();
+await page.waitForTimeout(1800);
+await page.screenshot({path: `${dir}/sky-${tag}.png`});
+await page.screenshot({path: `${dir}/sky-${tag}-crop.png`, clip: {x: 900, y: 0, width: 500, height: 200}});
+console.log('errors:', errors.length ? errors : 'none');
+await browser.close();

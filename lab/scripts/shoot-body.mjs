@@ -1,0 +1,17 @@
+import {chromium} from '@playwright/test';
+const dir = (process.env.OUT ?? 'artifacts');
+const tag = process.argv[2] ?? 'now';
+const browser = await chromium.launch({headless: true, channel: 'chromium', args: ['--enable-unsafe-webgpu', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required']});
+const page = await browser.newPage({ignoreHTTPSErrors: true, viewport: {width: 900, height: 820}});
+const errors = []; page.on('pageerror', (e) => errors.push(e.message));
+await page.goto((process.env.URL ?? 'https://127.0.0.1:5180') + '/?quality=high');
+await page.locator('#start:not([disabled])').waitFor({timeout: 120000});
+await page.evaluate((h) => { const s = window.burning.snapshot().score; window.burning.applyScore({...s, startHour: h, endHour: h + 0.2}); }, Number(process.env.HOUR ?? 23));
+await page.locator('#start').click();
+await page.waitForTimeout(600);
+await page.evaluate((t) => window.burning.seek(t), Number(process.env.AT ?? 1));
+await page.waitForTimeout(1500);
+await page.mouse.move(450, 400); await page.mouse.wheel(0, -1500); await page.waitForTimeout(1400);
+await page.screenshot({path: `${dir}/body-${tag}.png`});
+console.log('errors:', errors.length ? errors : 'none');
+await browser.close();

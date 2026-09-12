@@ -1,0 +1,13 @@
+import {chromium} from '@playwright/test';
+const dir = (process.env.OUT ?? 'artifacts');
+const browser = await chromium.launch({headless: true, channel: 'chromium', args: ['--enable-unsafe-webgpu', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required']});
+const page = await browser.newPage({ignoreHTTPSErrors: true, viewport: {width: 1200, height: 700}});
+const errors = []; page.on('pageerror', (e) => errors.push(e.message));
+await page.goto((process.env.URL ?? 'https://127.0.0.1:5180') + '/?quality=low');
+await page.locator('#start:not([disabled])').waitFor({timeout: 120000});
+await page.evaluate(() => document.fonts.ready);
+await page.screenshot({path: `${dir}/type-opening.png`});
+console.log('title face:', await page.evaluate(() => getComputedStyle(document.querySelector('#invitation h1')).fontFamily));
+console.log('loaded faces:', await page.evaluate(() => [...document.fonts].map((f) => `${f.family} ${f.weight} ${f.style} ${f.status}`)));
+console.log('errors:', errors.length ? errors : 'none');
+await browser.close();

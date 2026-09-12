@@ -1,0 +1,348 @@
+:root {
+  font-family: system-ui, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: #f2eade;
+  background: #000000;
+  font-synthesis: none;
+  font-weight: 400;
+  color-scheme: dark;
+  --page-gutter: clamp(18px, 3vw, 48px);
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  overflow: hidden;
+}
+button,
+input,
+select {
+  font: inherit;
+}
+button {
+  color: inherit;
+  cursor: pointer;
+  border: 1px solid #e5d4bd42;
+  background: #1a191b73;
+  border-radius: 2px;
+  padding: 10px 16px;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
+}
+button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid #edba81;
+  outline-offset: 4px;
+}
+button:hover:not(:disabled) {
+  background: #87705b70;
+  border-color: #e5d4bd90;
+}
+#world {
+  width: 100vw;
+  height: 100dvh;
+  display: block;
+  touch-action: none;
+}
+/* The title gives way to the working chrome over about half a second, rather
+   than one being switched off as the other is switched on. */
+#invitation,
+.masthead {
+  transition:
+    opacity 0.55s ease,
+    visibility 0.55s;
+}
+#invitation {
+  opacity: 1;
+  visibility: visible;
+}
+body.playing #invitation {
+  opacity: 0;
+  visibility: hidden;
+}
+.masthead {
+  opacity: 0;
+  visibility: hidden;
+}
+body.playing .masthead {
+  opacity: 1;
+  visibility: visible;
+}
+@media (prefers-reduced-motion: reduce) {
+  #invitation,
+  .masthead {
+    transition-duration: 0.001s;
+  }
+}
+#invitation {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(32px, 5vh, 56px);
+  pointer-events: none;
+}
+#invitation h1 {
+  margin: 0;
+  font-family: inherit;
+  font-size: clamp(16px, 3.1vw, 56px);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.24em;
+  text-indent: 0.24em;
+  white-space: nowrap;
+  text-shadow: 0 2px 30px #0003;
+}
+#start {
+  min-width: 118px;
+  min-height: 44px;
+  padding: 12px 30px;
+  font-size: 13px;
+  letter-spacing: 0.16em;
+  text-indent: 0.16em;
+  background: #211d1a59;
+  border-color: #f2eade85;
+  backdrop-filter: blur(8px);
+  pointer-events: auto;
+}
+#start {
+  border-radius: 999px;
+}
+#start:hover:not(:disabled) {
+  background: transparent;
+  border-color: #f2eade;
+}
+#start:active:not(:disabled) {
+  background: #211d1a73;
+}
+#start:disabled {
+  cursor: wait;
+}
+/* What the viewer may do, said once while he is catching and then left alone. */
+.hint {
+  position: absolute;
+  inset: auto 0 max(38px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  padding: 0 var(--page-gutter);
+  /* Sand rather than paper: there to be found, not to be announced. */
+  color: #d9c8ad85;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  text-shadow: 0 1px 12px #000000b0;
+  opacity: 0;
+  visibility: hidden;
+}
+.hint svg {
+  flex: none;
+  opacity: 0.85;
+}
+.hint kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 21px;
+  height: 21px;
+  padding: 0 3px;
+  border: 1px solid #d9c8ad4d;
+  border-radius: 5px;
+  background: #1a191b47;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1;
+}
+body.hinting .hint {
+  animation: show-hint 4s ease 0.4s forwards;
+}
+@keyframes show-hint {
+  0% {
+    opacity: 0;
+    visibility: visible;
+  }
+  12%,
+  72% {
+    opacity: 1;
+    visibility: visible;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+.masthead {
+  position: absolute;
+  top: max(26px, env(safe-area-inset-top));
+  left: max(var(--page-gutter), env(safe-area-inset-left));
+  right: max(var(--page-gutter), env(safe-area-inset-right));
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  pointer-events: none;
+  text-shadow: 0 1px 12px #0006;
+}
+.wordmark {
+  font-family: inherit;
+  font-size: clamp(10px, 0.95vw, 14px);
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  white-space: nowrap;
+}
+.transport {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+#pause {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  pointer-events: auto;
+}
+#pause svg {
+  display: block;
+}
+@media (hover: hover) {
+  #pause:hover:not(:disabled) {
+    background: #f2eade14;
+  }
+}
+#progress {
+  font-variant-numeric: tabular-nums;
+}
+/* These fades use wall time, including after the score clock has stopped.
+   Removing the ending class on a seek/replay restores both controls immediately. */
+body.score-ended #pause {
+  pointer-events: none;
+  animation: retire-control 0.8s ease forwards;
+}
+body.score-ended #progress {
+  animation: retire-control 0.8s ease 5s forwards;
+}
+@keyframes retire-control {
+  from {
+    opacity: 1;
+    visibility: visible;
+  }
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+/* The credits wait for the piece to be over, then arrive on wall time the way
+   the controls above leave, and are gone the instant a seek puts him back. */
+.credits {
+  font-family: inherit;
+  position: absolute;
+  inset: auto 0 max(34px, env(safe-area-inset-bottom));
+  display: grid;
+  gap: 6px;
+  padding: 0 var(--page-gutter);
+  color: #f2eadeb3;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  line-height: 1.6;
+  text-align: center;
+  text-shadow: 0 1px 10px #0008;
+  opacity: 0;
+  visibility: hidden;
+}
+.credits p {
+  margin: 0;
+}
+.credits span {
+  display: block;
+  color: #f2eade73;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.credits em {
+  font-style: italic;
+  letter-spacing: 0.02em;
+}
+.credits a {
+  color: inherit;
+  text-decoration: none;
+  text-underline-offset: 4px;
+}
+.credits a:hover {
+  color: #f2eade;
+  text-decoration: underline;
+}
+.credits-fine {
+  margin-top: 10px !important;
+  color: #f2eade59;
+  font-size: 10px;
+  letter-spacing: 0.01em;
+}
+body.score-ended .credits {
+  animation: arrive-credits 2.6s ease 4s forwards;
+}
+@keyframes arrive-credits {
+  from {
+    opacity: 0;
+    visibility: visible;
+  }
+  to {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+[hidden] {
+  display: none !important;
+}
+@media (max-width: 600px) {
+  .masthead {
+    top: max(16px, env(safe-area-inset-top));
+    gap: 10px;
+  }
+  .transport {
+    gap: 10px;
+    font-size: 10px;
+  }
+  .credits {
+    inset: auto 0 max(20px, env(safe-area-inset-bottom));
+    font-size: 11px;
+  }
+  .credits-fine {
+    /* Still said on a small screen, since it is said because it is owed. */
+    margin-top: 8px !important;
+    font-size: 9px;
+    line-height: 1.5;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  button {
+    transition: none;
+  }
+  body.score-ended #pause,
+  body.score-ended #progress,
+  body.score-ended .credits {
+    animation-duration: 0.001s;
+  }
+  body.hinting .hint {
+    animation-duration: 6s;
+  }
+}
+
+

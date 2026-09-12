@@ -1,0 +1,22 @@
+import {chromium} from '@playwright/test';
+const browser = await chromium.launch({headless: true, channel: 'chromium', args: ['--enable-unsafe-webgpu', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required']});
+const page = await browser.newPage({ignoreHTTPSErrors: true, viewport: {width: 1000, height: 640}});
+const errors = []; page.on('pageerror', (e) => errors.push(e.message));
+await page.goto('http://127.0.0.1:5180/?quality=low');
+await page.locator('#start:not([disabled])').waitFor({timeout: 120000});
+await page.locator('#start').click();
+await page.waitForTimeout(500);
+const crest = await page.evaluate(() => window.burning.snapshot().score.stage_07_crest);
+const bearing = async (d) => page.evaluate(async (t) => {
+  window.burning.seek(t);
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  const s = window.burning.snapshot();
+  const dx = s.camera.position[0] - s.camera.target[0], dz = s.camera.position[2] - s.camera.target[2];
+  return +((Math.atan2(dx, dz) * 180) / Math.PI).toFixed(1);
+}, crest + d);
+const base = await bearing(-3);
+const out = [];
+for (const d of [-3, 0, 0.5, 1.7, 3, 5, 6]) out.push(`${d}s: ${(await bearing(d) - base).toFixed(0)}°`);
+console.log('camera bearing relative to the approach:', out.join('  '));
+console.log('errors:', errors.length ? errors : 'none');
+await browser.close();

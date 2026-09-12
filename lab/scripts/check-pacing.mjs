@@ -1,0 +1,26 @@
+import {chromium} from '@playwright/test';
+const browser = await chromium.launch({headless: true, channel: 'chromium', args: ['--enable-unsafe-webgpu', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required']});
+const page = await browser.newPage({ignoreHTTPSErrors: true, viewport: {width: 844, height: 390}, deviceScaleFactor: 3});
+const errors = []; page.on('pageerror', (e) => errors.push(e.message));
+await page.goto('http://127.0.0.1:5180/?quality=low');
+await page.locator('#start:not([disabled])').waitFor({timeout: 120000});
+await page.addInitScript(() => {});
+await page.locator('#start').click();
+await page.waitForTimeout(400);
+const s = await page.evaluate(() => window.burning.snapshot().score);
+const window_ = async (label, from, to) => {
+  await page.evaluate((t) => window.burning.seek(t), from);
+  await page.evaluate(() => window.burning.togglePause());
+  await page.evaluate(() => { window.__gaps = []; let last = performance.now();
+    const f = () => { const n = performance.now(); window.__gaps.push(n - last); last = n; requestAnimationFrame(f); }; requestAnimationFrame(f); });
+  await page.waitForFunction((t) => window.burning.snapshot().time >= t, to, {timeout: 90000});
+  const g = await page.evaluate(() => window.__gaps.slice(2));
+  await page.evaluate(() => window.burning.togglePause());
+  g.sort((a, b) => a - b);
+  console.log(`${label} frames ${g.length}  median ${g[Math.floor(g.length / 2)].toFixed(1)} ms  worst ${g[g.length - 1].toFixed(1)} ms  over 50ms: ${g.filter((x) => x > 50).length}`);
+};
+await window_('walking, plain      :', 30, 40);
+await window_('into the first fall :', s.stage_05_fall - 4, s.stage_05_fall + 6);
+await window_('into the crest stop :', s.stage_07_crest - 4, s.stage_07_crest + 6);
+console.log('errors:', errors.length ? errors : 'none');
+await browser.close();

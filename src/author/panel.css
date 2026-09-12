@@ -1,0 +1,324 @@
+#author-toggle {
+  position: absolute;
+  top: 92px;
+  right: max(var(--page-gutter), env(safe-area-inset-right));
+  font-size: 10px;
+  background: #262322df;
+  z-index: 5;
+}
+#author-panel {
+  position: absolute;
+  z-index: 4;
+  right: 26px;
+  top: 138px;
+  bottom: 270px;
+  width: 318px;
+  overflow: auto;
+  background: #201f21eb;
+  border: 1px solid #b6977540;
+  border-radius: 4px;
+  padding: 22px;
+  box-shadow: 0 8px 40px #0002;
+  font-size: 10px;
+  color: #dfd3c5;
+  scrollbar-width: thin;
+  backdrop-filter: blur(12px);
+}
+#author-panel header {
+  padding-bottom: 15px;
+}
+.studio-kicker {
+  font-size: 8px;
+  letter-spacing: 0.15em;
+  color: #c4a685;
+}
+#author-panel h2 {
+  font-family: Georgia, serif;
+  font-size: 24px;
+  line-height: 1.2;
+  margin: 12px 0;
+}
+#author-panel p {
+  font-size: 9px;
+  line-height: 1.7;
+  opacity: 0.65;
+}
+#author-panel section {
+  padding: 18px 0;
+  border-top: 1px solid #ded1ba20;
+}
+#author-panel h3 {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin: 0 0 15px;
+}
+#author-panel label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 12px 0;
+  color: #b7aa99;
+}
+#author-panel input,
+#author-panel select {
+  min-width: 0;
+  width: 100%;
+  background: #302d2b;
+  border: 1px solid #e7c69d30;
+  border-radius: 2px;
+  padding: 8px;
+  color: #e1d3c0;
+  font-size: 10px;
+}
+#author-panel input[type='range'] {
+  accent-color: #d9a267;
+  padding: 0;
+}
+#author-panel button {
+  padding: 8px 9px;
+  font-size: 9px;
+}
+#author-panel details {
+  padding: 14px 0;
+  border-top: 1px solid #ded1ba20;
+}
+#author-panel summary {
+  cursor: pointer;
+  font-size: 10px;
+  color: #d9c5ac;
+}
+.studio-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.studio-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.studio-check {
+  flex-direction: row !important;
+  align-items: center;
+}
+#author-panel .studio-check input {
+  width: auto;
+}
+#author-panel .number-row {
+  display: flex;
+  gap: 10px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+#author-panel .number-row input {
+  flex: 0 0 82px;
+  width: 82px;
+}
+.studio-row output {
+  color: #deb57b;
+  font-variant-numeric: tabular-nums;
+}
+#studio-message {
+  color: #ffd099;
+  opacity: 1 !important;
+}
+@media (max-width: 700px) {
+  #author-panel {
+    right: 12px;
+    width: min(300px, 84vw);
+    top: 125px;
+    bottom: 295px;
+  }
+  #author-toggle {
+    right: max(var(--page-gutter), env(safe-area-inset-right));
+    top: 80px;
+  }
+}
+
+#author-panel .numeric-control {
+  margin: 16px 0;
+}
+#author-panel .numeric-control input[type='range'] {
+  display: block;
+  height: 20px;
+  margin-top: 6px;
+  cursor: pointer;
+}
+#author-panel .numeric-control .number-row span {
+  color: #b7aa99;
+}
+#recovery-events .numeric-control button {
+  margin-top: 6px;
+}
+
+#author-timeline {
+  position: absolute;
+  z-index: 6;
+  left: 26px;
+  right: 26px;
+  bottom: 58px;
+  padding: 18px 22px 14px;
+  border: 1px solid #b697755c;
+  border-radius: 5px;
+  background: #201f21ee;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 40px #0004;
+  color: #dfd3c5;
+  font-size: 11px;
+}
+.timeline-heading {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.timeline-heading > div:first-child {
+  flex: 1;
+}
+#studio-phase {
+  display: block;
+  margin-top: 5px;
+  font-size: 14px;
+  font-weight: 500;
+}
+#studio-clock {
+  color: #f0c58e;
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+}
+#author-timeline button {
+  font-size: 10px;
+  padding: 8px 12px;
+}
+.timeline-track {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 15px 0 11px;
+}
+.timeline-track > span {
+  color: #b7aa99;
+  font-variant-numeric: tabular-nums;
+}
+.timeline-rail {
+  flex: 1;
+  position: relative;
+  min-width: 0;
+}
+#timeline {
+  display: block;
+  width: 100%;
+  height: 30px;
+  margin: 0;
+  background: transparent;
+  appearance: none;
+  cursor: ew-resize;
+  touch-action: none;
+}
+#timeline::-webkit-slider-runnable-track {
+  height: 7px;
+  background: #6c5441;
+  border-radius: 4px;
+}
+#timeline::-webkit-slider-thumb {
+  appearance: none;
+  height: 23px;
+  width: 13px;
+  margin-top: -8px;
+  border: 1px solid #ffdcad;
+  border-radius: 3px;
+  background: #edba81;
+  box-shadow: 0 0 0 4px #edba8120;
+}
+#timeline::-moz-range-track {
+  height: 7px;
+  background: #6c5441;
+  border-radius: 4px;
+}
+#timeline::-moz-range-thumb {
+  height: 23px;
+  width: 13px;
+  border: 1px solid #ffdcad;
+  border-radius: 3px;
+  background: #edba81;
+}
+#timeline-ticks {
+  position: absolute;
+  left: 7px;
+  right: 7px;
+  bottom: -2px;
+  pointer-events: none;
+}
+#timeline-ticks span {
+  position: absolute;
+  height: 5px;
+  width: 1px;
+  background: #e2bc8d;
+}
+#timeline-cues {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+#timeline-cues button {
+  padding: 6px 10px;
+  font-variant-numeric: tabular-nums;
+  color: #e5ccb0;
+}
+.timeline-note {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 13px;
+  font-size: 10px;
+  color: #a99e91;
+}
+#control-status {
+  color: #cfb392;
+}
+@media (max-width: 700px) {
+  #author-timeline {
+    left: 12px;
+    right: 12px;
+    bottom: 80px;
+    padding: 12px;
+  }
+  .timeline-heading {
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .timeline-heading > div:first-child {
+    flex: auto;
+  }
+  #studio-clock {
+    font-size: 18px;
+  }
+  .timeline-heading .studio-actions {
+    margin-left: auto;
+  }
+  #studio-phase {
+    font-size: 11px;
+  }
+  #author-timeline button {
+    padding: 6px;
+    font-size: 9px;
+  }
+  .timeline-note {
+    display: block;
+    line-height: 1.5;
+    font-size: 9px;
+  }
+  #control-status {
+    display: block;
+  }
+}
+
+#author-panel .heartbeat-audition {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #ded1ba20;
+}
+#author-panel .heartbeat-audition [data-heart-preview] {
+  flex: 1 1 44%;
+}

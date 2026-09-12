@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "dist-runtime",
+    "rootDir": "src"
+  },
+  "include": ["src/character/index.ts", "src/sand/index.ts"],
+  "exclude": ["tests", "src/playground"]
+}

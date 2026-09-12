@@ -1,0 +1,15 @@
+.DS_Store
+artifacts/
+dist-runtime/
+dist/
+node_modules/
+tmp/
+# ---- the song ----
+# Whatever is playing goes here on the way into a build. It is not the code's
+# to publish.
+public/audio/*
+!public/audio/.gitkeep
+dist-author/
+*.blend
+*.blend1
+*.fbx
