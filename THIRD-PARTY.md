@@ -33,10 +33,10 @@ from a clone of this repository therefore needs your own licensed copy of that
 package.
 
 **Mixamo** supplies the skeleton the figure is built on and the motions it
-performs: walking, giving way, rising and kneeling. Mixamo's terms allow that
+performs: walking, turning, shifting weight, giving way, rising and kneeling. Mixamo's terms allow that
 inside a finished work and do not allow the characters or motions to be passed
 on as assets for someone else to use. So they are here only as this piece:
-retargeted, packed into the single file the page loads, and offered to nobody as
+retargeted, packed into the files the page loads, and offered to nobody as
 a download. The original captures are not in this repository.
 
 The body those motions move is not theirs. It was modelled here, in Blender, and

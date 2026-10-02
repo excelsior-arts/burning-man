@@ -199,6 +199,7 @@ export function createDesert(scene: THREE.Scene) {
 
   return {
     field,
+    sandMaterial: terrain.surfaceMaterial,
     setContacts: (points: readonly {x: number; y: number; z: number; radius: number}[]) =>
       terrain.setContacts(points),
     setTimeOfDay,

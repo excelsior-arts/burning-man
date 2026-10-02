@@ -11,6 +11,9 @@ Press **Let it** to begin. **W A S D** or the arrow keys walk him relative to th
 camera; let go and he finds his own way again. Drag to orbit, scroll to zoom.
 **P**, **Space** or the button pauses.
 
+Under keyboard control he steps into large turns, takes a starting and stopping
+step, and shifts his weight at rest. His head leads smaller direction changes.
+
 It draws with WebGPU where a browser has it and falls back to WebGL2 where it
 does not, and it lowers its own graphics budget on a machine that cannot hold
 the frame rate.

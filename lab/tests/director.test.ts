@@ -9,7 +9,7 @@ import {
   validateScore,
 } from '../../src/experience/score';
 import {Walker} from '../../src/experience/walker';
-import {LOOK_PIVOT, lookSpan, lookStart} from '../../src/experience/look-around';
+import {lookPivot, lookSpan, lookStart} from '../../src/experience/look-around';
 import {sampleCameraShot} from '../../src/experience/camera-director';
 import {REFERENCE} from './reference-score';
 const score = validateScore(REFERENCE);
@@ -91,7 +91,7 @@ describe('Scripted timeline rehearsal', () => {
     expect(off(lookStart(score) - 0.01, 0)).toBeLessThan(0.001);
     // Each quarter turn settles well inside its own beat, then holds.
     for (let quarter = 1; quarter <= 4; quarter++) {
-      const landed = lookStart(score) + (quarter - 1) * slot + LOOK_PIVOT + 0.1;
+      const landed = lookStart(score) + (quarter - 1) * slot + lookPivot(score) + 0.1;
       expect(off(landed, quarter)).toBeLessThan(0.02);
       expect(off(lookStart(score) + quarter * slot - 0.01, quarter)).toBeLessThan(0.001);
     }

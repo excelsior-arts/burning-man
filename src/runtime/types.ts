@@ -10,4 +10,7 @@ export interface MotionState {
   facing: number;
   speed: number;
   distance: number;
+  /** Captured footwork sampled by manual control or the scripted look-around. */
+  gesture?: {clip: string; time: number};
+  intent?: number;
 }

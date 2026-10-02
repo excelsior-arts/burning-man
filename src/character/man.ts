@@ -24,6 +24,7 @@ import {bodyDetailIndices, type BodyDetail} from './body-detail';
 import {FootGrounding, type GroundSurface} from './foot-grounding';
 import {WALK_STRIDE} from './walk-gait';
 import {decodeClips} from './clip-pack';
+import {angleDelta} from './manual-gait';
 
 type CharacterAssets = {
   gltf: Awaited<ReturnType<GLTFLoader['loadAsync']>>;
@@ -36,7 +37,7 @@ type CharacterAssets = {
 let assets: {base: string; work: Promise<CharacterAssets>} | undefined;
 
 /**
- * Ask for every one of the body's five files at once. Nothing here waits on
+ * Ask for the body's files at once. Nothing here waits on
  * anything else: the eight-megabyte body downloads while the animations, the
  * detail indices and the flame texture are already in flight, and the host can
  * start all of it before it builds the desert.
@@ -45,11 +46,13 @@ export function preloadCharacter(base: string) {
   if (assets?.base === base) return assets.work;
   const at = (path: string) => new URL(path, base).href;
   const work = (async (): Promise<CharacterAssets> => {
-    const animations = async () => {
-      const response = await fetch(at('animations/clips.bin'));
+    const animations = async () => (await Promise.all(['clips', 'locomotion'].map(async name => {
+      const response = await fetch(at(`animations/${name}.bin`));
+      // Older consumers of the reusable body still have its original shelf.
+      if (name === 'locomotion' && response.status === 404) return [];
       if (!response.ok) throw new Error('Animations unavailable');
       return decodeClips(await response.arrayBuffer()).clips;
-    };
+    }))).flat();
     const body = async () => {
       const response = await fetch(at('character/body-detail.bin'));
       if (response.ok) return response.arrayBuffer();
@@ -98,6 +101,9 @@ export class BurningMan {
   private time = uniform(0);
   private previous = new THREE.Vector3();
   private poseBase = new Map<THREE.Object3D, THREE.Quaternion>();
+  private lastFacing?: number;
+  private lookYaw = 0;
+  private lean = 0;
   private surface?: THREE.SkinnedMesh;
   private detail: BodyDetail = 'high';
   private appliedDetail?: BodyDetail;
@@ -235,7 +241,10 @@ export class BurningMan {
     if (this.previous.distanceTo(this.object.position) > 3) this.grounding?.reset();
     this.heat.value = cue.burn * score.ember * 3.2;
     this.time.value = time;
-    const name = cue.clip === 'locomotion' ? (motion.speed > 0.025 ? 'walk' : 'idle') : cue.clip;
+    const gesture = cue.clip === 'locomotion' && motion.gesture && this.actions.has(motion.gesture.clip)
+      ? motion.gesture : undefined;
+    const name = cue.clip === 'locomotion'
+      ? gesture?.clip ?? (motion.speed > 0.025 ? 'walk' : 'idle') : cue.clip;
     const next = this.actions.get(name)!;
     if (!next) throw new Error(`Missing authored action ${name}`);
     if (this.active !== next) {
@@ -247,8 +256,9 @@ export class BurningMan {
     }
     this.animation = name;
     const duration = next.getClip().duration;
-    next.time =
-      name === 'opening'
+    next.time = gesture
+      ? name === 'idleweight' ? gesture.time % duration : Math.min(gesture.time, duration - 0.00001)
+      : name === 'opening'
         ? 0
         : name === 'walk'
           ? ((motion.distance / WALK_STRIDE) * duration) % duration
@@ -265,6 +275,21 @@ export class BurningMan {
       chest = this.root.getObjectByName('mixamorig1Spine2');
     for (const bone of [head, neck, chest])
       if (bone) this.poseBase.set(bone, bone.quaternion.clone());
+    // The head anticipates a requested direction; the chest carries a little
+    // of a walking curve's weight. An orbit by itself never steers the man.
+    const steering = cue.clip === 'locomotion' && motion.intent !== undefined;
+    const follow = 1 - Math.exp(-dt * 8);
+    const turnRate = this.lastFacing === undefined || dt <= 0 ? 0
+      : angleDelta(motion.facing, this.lastFacing) / dt;
+    this.lookYaw += ((steering ? Math.max(-0.5, Math.min(0.5, angleDelta(motion.intent!, motion.facing))) : 0) - this.lookYaw) * follow;
+    this.lean += ((steering ? Math.max(-0.09, Math.min(0.09, -turnRate * motion.speed * 0.055)) : 0) - this.lean) * follow;
+    this.lastFacing = motion.facing;
+    if (head) head.rotateY(this.lookYaw * 0.65);
+    if (neck) neck.rotateY(this.lookYaw * 0.15);
+    if (chest) {
+      chest.rotateY(this.lookYaw * 0.2);
+      chest.rotateZ(this.lean);
+    }
     if (head) head.rotateX(cue.bow * 0.68);
     if (neck) neck.rotateX(cue.bow * 0.12);
     if (chest) chest.rotateX(cue.bow * 0.1);
@@ -296,6 +321,8 @@ export class BurningMan {
     {x: 0, y: 0, z: 0, radius: 0.11},
     {x: 0, y: 0, z: 0, radius: 0.11},
   ];
+  /** Sole centres and headings for the captured pivot/start/stop contacts. */
+  readonly feet = Array.from({length: 2}, () => ({x: 0, y: 0, z: 0, facing: 0}));
   /** From each joint down to the skin that actually meets the sand. */
   private readonly contactDrop = [0.028, 0.028, 0.055, 0.055, 0.03, 0.03];
   private readonly contactBones = [
@@ -316,6 +343,16 @@ export class BurningMan {
       contact.x = scratch.x;
       contact.y = scratch.y - this.contactDrop[i]!;
       contact.z = scratch.z;
+      if (i < 2) {
+        const ankle = this.root.getObjectByName(`mixamorig1${i === 0 ? 'Left' : 'Right'}Foot`);
+        if (!ankle) continue;
+        ankle.getWorldPosition(scratch);
+        const foot = this.feet[i]!;
+        foot.x = (scratch.x + contact.x) / 2;
+        foot.z = (scratch.z + contact.z) / 2;
+        foot.y = Math.min(scratch.y - 0.099, contact.y);
+        foot.facing = Math.atan2(contact.x - scratch.x, contact.z - scratch.z);
+      }
     }
   }
 
@@ -336,6 +373,8 @@ export class BurningMan {
     this.grounding?.reset();
     for (const [bone, q] of this.poseBase) bone.quaternion.copy(q);
     this.poseBase.clear();
+    this.lastFacing = undefined;
+    this.lookYaw = this.lean = 0;
     this.mixer?.stopAllAction();
     this.active = undefined;
   }

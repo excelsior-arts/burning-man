@@ -2,18 +2,20 @@ import type {MotionState} from '../runtime/types';
 import {sampleScore, clamp, type Score} from './score';
 import {Walker} from './walker';
 import {journeyHeading, type Journey} from './journey';
-import {lookHeading, lookTurn} from './look-around';
+import {duneHeight} from '../sand/field';
+import type {WalkObstacle} from './obstacles';
 
 const STEP = 1 / 60;
 const copy = (m: MotionState): MotionState => ({
   ...m,
   position: {...m.position},
   velocity: {...m.velocity},
+  ...(m.gesture ? {gesture: {...m.gesture}} : {}),
 });
 
 /** Cached base-terrain rehearsal. Backward/forward scrubs reuse the same motion samples. */
 export class ScriptedWalk {
-  private readonly walker = new Walker();
+  private readonly walker: Walker;
   private readonly samples: MotionState[] = [];
   private readonly score: Score;
   private readonly journey: Journey;
@@ -24,7 +26,9 @@ export class ScriptedWalk {
     score: Score,
     journey: Journey = 'sea',
     private driven = false,
+    obstacles: readonly WalkObstacle[] = [],
   ) {
+    this.walker = new Walker(duneHeight, obstacles);
     this.journey = journey;
     this.score = structuredClone(score);
     this.walker.reset(score.spawnX, score.spawnZ);
@@ -59,7 +63,6 @@ export class ScriptedWalk {
       this.walker.state.position.z,
     ]);
     this.walker.step(...heading, dt, sampleScore(at, this.score, true, this.driven).mobility, this.score);
-    const look = lookHeading(at, this.score, heading);
-    if (look !== null) this.walker.turn(look, dt, ...lookTurn(this.score));
+    if (!this.driven) this.walker.look(at + dt, this.score, heading);
   }
 }

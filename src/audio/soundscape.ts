@@ -261,6 +261,7 @@ export class Soundscape {
     playing: boolean,
     s: Score,
     listener?: SurfListener,
+    landings?: readonly number[],
   ) {
     const fromDistance = this.distance;
     this.distance = distance;
@@ -285,7 +286,9 @@ export class Soundscape {
     );
     this.windFilter?.frequency.setTargetAtTime(430 + gust * 520, t, 0.5);
     this.fireGain!.gain.setTargetAtTime(playing ? burn * s.fireGain * 0.22 : 0, t, 0.1);
-    if (playing && walking && distance >= fromDistance) {
+    if (playing && landings) {
+      for (const foot of landings) this.footstep(foot === 0 ? -0.24 : 0.24, 0.65, s);
+    } else if (playing && walking && distance >= fromDistance) {
       // A tentative step is a quiet step. Footfalls are the only pulse in the
       // mix, so a cadence gathering after a fall was heard as the music itself
       // changing tempo. Weighting each step by how much of his stride he is
@@ -294,9 +297,7 @@ export class Soundscape {
       const weight = Math.min(1, Math.max(0, stride)) ** 1.3;
       for (let step = walkStepCount(fromDistance); step < walkStepCount(distance); step++) {
         const pan = WALK_CONTACTS[step % 2]!.foot === 'left' ? -0.24 : 0.24;
-        this.footfalls++;
-        this.burst(s.stepsGain * 0.55 * weight, 0.16, 650, pan);
-        this.burst(s.stepsGain * 0.12 * weight, 0.055, 160, pan);
+        this.footstep(pan, weight, s);
       }
     }
     this.crackle += playing ? dt * burn : 0;
@@ -305,6 +306,11 @@ export class Soundscape {
       if (Math.random() < 0.5)
         this.burst(s.fireGain * 0.13, 0.025, 2000, (Math.random() - 0.5) * 0.5);
     }
+  }
+  private footstep(pan: number, weight: number, score: Score) {
+    this.footfalls++;
+    this.burst(score.stepsGain * 0.55 * weight, 0.16, 650, pan);
+    this.burst(score.stepsGain * 0.12 * weight, 0.055, 160, pan);
   }
   private burst(volume: number, duration: number, frequency: number, pan: number) {
     if (!this.context || !this.noise || !this.master) return;

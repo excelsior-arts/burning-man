@@ -9,6 +9,8 @@ import {FollowCamera} from '../world/follow-camera';
 import {viewportFraming} from '../world/viewport-framing';
 import {SandContacts} from '../sand/contacts';
 import {BurningMan, preloadCharacter} from '../character/man';
+import {FallenAltar, FALLEN_ALTAR} from '../world/fallen-altar';
+import {FALLEN_OBSTACLES} from '../world/fallen-site';
 import {Soundscape} from '../audio/soundscape';
 import {resolveMusicUrl} from '../audio/music-cdn';
 import {
@@ -31,7 +33,6 @@ import {MAP} from '../sand/layout';
 import {COASTAL_CLIMB, coastX, coastalCrest} from '../sand/geography';
 import {surveyReady} from '../sand/height-atlas';
 import {surveyJourney, travelBudget, journeyDirection, journeyHeading, type Journey} from './journey';
-import {lookHeading, lookTurn} from './look-around';
 import {FrameLoop} from './frame-loop';
 import {AdaptiveQuality, QUALITY, renderPixelRatio} from './quality';
 const $ = <T extends HTMLElement>(s: string) => document.querySelector<T>(s)!;
@@ -57,6 +58,7 @@ let score = structuredClone(DEFAULT_SCORE),
   preview: Cue['clip'] | null = null,
   previewAt = 0,
   view = 'full';
+let altarStudy: THREE.Vector3 | null = null;
 const abort = new AbortController();
 function followAudio() {
   audio.follow({...transport, visible: !document.hidden}, score);
@@ -93,13 +95,16 @@ const controls = new SmoothOrbit(camera, $('#world'));
 await survey;
 const desert = createDesert(scene),
   sea = new CoastalSea(renderer, scene, camera, QUALITY[graphics.tier].water),
-  walker = new Walker(desert.field.height),
+  walker = new Walker(desert.field.height, FALLEN_OBSTACLES),
   contacts = new SandContacts(desert.field);
 const man = new BurningMan(characterBase, {
   height: desert.field.height,
   sinkDepth: (x, z) => desert.field.support(x, z).sinkDepth,
 });
 scene.add(man.object);
+const opened = Promise.all([man.ready, sea.ready]);
+const fallen = new FallenAltar(characterBase, desert.field.height, desert.sandMaterial, opened);
+scene.add(fallen.object);
 /** While the viewer is walking him, nothing scripted stops him and no scripted
  * camera move runs: not the look-around, not the first fall, not the pause at
  * the crest. Let go and the piece takes itself back after the idle return. The
@@ -153,6 +158,7 @@ fillCredits();
  * viewer may pull back from that, and may not push in past it: coming closer
  * than the piece ever does puts the eye inside the fire. */
 function cameraRange() {
+  if (__AUTHOR__ && altarStudy) return {closest: 1.25, furthest: 12};
   const closest = Math.max(
     framing.minDistance,
     (score.cameraDistance - 1.2) * framing.distanceScale,
@@ -260,6 +266,7 @@ function syncPublicUI() {
   if ($('#progress').textContent !== countdown) $('#progress').textContent = countdown;
 }
 function reset() {
+  leaveAltarStudy();
   frameLoop.resetClock();
   graphics.resetSampling();
   transport.reset();
@@ -407,6 +414,7 @@ async function togglePause() {
   // Toggle first: a click must always change the button, whatever audio does.
   transport.playing = !transport.playing;
   if (transport.playing) {
+    leaveAltarStudy();
     scrubbed = false;
     preview = null;
   }
@@ -481,7 +489,10 @@ document.addEventListener(
 controls.input.addEventListener('start', () => cameraDirector.begin(transport.time));
 controls.input.addEventListener('end', () => cameraDirector.end(transport.time));
 const forward = new THREE.Vector3(),
-  right = new THREE.Vector3();
+  right = new THREE.Vector3(),
+  across = new THREE.Vector3();
+let stills: {offset: {x: number; y: number}} = {offset: {x: 0, y: 0}};
+let framedAt = -Infinity;
 function input() {
   const x =
     Number(keys.has('KeyD') || keys.has('ArrowRight')) -
@@ -507,6 +518,7 @@ function input() {
 }
 function seek(time: number, reconstruct = true) {
   if (!ready || !Number.isFinite(time)) return;
+  leaveAltarStudy();
   frameLoop.resetClock();
   graphics.resetSampling();
   transport.seek(time, score.duration);
@@ -520,7 +532,7 @@ function seek(time: number, reconstruct = true) {
   if (reconstruct) {
     if (journey === 'sea') director.routine = 'story';
     desert.resetSand();
-    rehearsal ??= new ScriptedWalk(score, journey, journey !== 'sea');
+    rehearsal ??= new ScriptedWalk(score, journey, journey !== 'sea', FALLEN_OBSTACLES);
     sample = (at) => rehearsal!.sample(at);
     // Rebuild the nearby footprints without replaying old dust emissions. The
     // scrubber previews the authored route; free-walk detours are not recorded.
@@ -550,6 +562,15 @@ function seek(time: number, reconstruct = true) {
     walker.state.position.y + aimHeight,
     walker.state.position.z,
   );
+  // Stills only, and only in Studio: shifting what the camera aims at takes him
+  // off the middle of the frame, which is the one composition the piece itself
+  // never uses. Across the frame is read off the camera, so the nudge means the
+  // same thing from any angle.
+  if (__AUTHOR__ && (stills.offset.x || stills.offset.y)) {
+    across.setFromMatrixColumn(camera.matrixWorld, 0).setY(0).normalize();
+    target.addScaledVector(across, stills.offset.x);
+    target.y += stills.offset.y;
+  }
   if (reconstruct && view !== 'face') snapCamera();
   else {
     follow.snap(target);
@@ -563,6 +584,7 @@ function seek(time: number, reconstruct = true) {
 function setRoutine(value: string) {
   if (!['story', 'keyboard', 'coast', 'air', 'fire', 'earth', 'circle', 'still'].includes(value))
     return;
+  leaveAltarStudy();
   journey = value === 'air' || value === 'fire' || value === 'earth' ? value : 'sea';
   rehearsal = undefined;
   director.routine = value as WalkRoutine;
@@ -591,6 +613,7 @@ function cameraSteering() {
 }
 function cameraStudy() {
   return (
+    (__AUTHOR__ && altarStudy !== null) ||
     view === 'face' ||
     preview !== null ||
     !['story', 'air', 'fire', 'earth'].includes(director.routine)
@@ -666,6 +689,7 @@ function orientShot(shot: ReturnType<typeof sampleCameraShot>) {
   return {...shot, offset};
 }
 function setView(value: string) {
+  leaveAltarStudy();
   view = value;
   applyCameraRange();
   const p = walker.state.position;
@@ -719,6 +743,8 @@ function snapshot() {
       height: renderer.domElement.height,
     },
     study: preview,
+    altarStudy: altarStudy ? 'fallen' : null,
+    fallen: fallen.inspect(),
     character: man.inspect(),
     lighting: desert.lighting,
     sand: desert.inspectSand(),
@@ -740,10 +766,62 @@ function snapshot() {
       : 'webgl',
   };
 }
-await Promise.all([man.ready, sea.ready]);
+function leaveAltarStudy() {
+  if (!altarStudy) return;
+  altarStudy = null;
+  man.object.visible = true;
+  applyCameraRange();
+}
+await opened;
+// The fallen one is a mile off the walk and screened by a dune: nobody reaches
+// it who has not gone looking on foot. Holding the opening frame until it has
+// downloaded charges every viewer for a thing most of them never see, so it is
+// let in whenever it arrives and asks for one more frame when it does.
+void fallen.ready.then(
+  () => frameLoop.invalidate(),
+  () => {},
+);
 if (__AUTHOR__) {
+  const {mountFraming} = await import('./framing');
+  stills = mountFraming(
+    () => {
+      const away = camera.position.clone().sub(controls.target);
+      return {
+        distance: away.length(),
+        around: (Math.atan2(away.x, away.z) * 180) / Math.PI,
+        above: (Math.asin(away.y / Math.max(0.0001, away.length())) * 180) / Math.PI,
+      };
+    },
+    // Framing is found with the piece stopped, where nothing is moving and the
+    // loop is asleep. A nudge has to wake it, and keep it awake long enough for
+    // the camera to ease onto the new frame rather than arriving a step at a time.
+    () => {
+      framedAt = performance.now();
+      frameLoop.invalidate();
+    },
+  );
   const {mountAuthor} = await import('../author/panel');
   const jumpToAltar = (name: string) => {
+    if (name === 'fallen') {
+      if (!ready) return;
+      seek(Math.max(score.stage_03_walk + 3, 12), false);
+      setRoutine('keyboard');
+      view = 'full';
+      walker.reset(...FALLEN_ALTAR.visitor);
+      walker.state.facing = Math.atan2(FALLEN_ALTAR.position[0] - walker.state.position.x,
+        FALLEN_ALTAR.position[1] - walker.state.position.z);
+      contacts.reset();
+      man.clear();
+      altarStudy = fallen.object.position.clone().add(new THREE.Vector3(0, 0.14, 0));
+      target.copy(altarStudy);
+      follow.snap(target);
+      camera.position.copy(target).add(new THREE.Vector3(1.9, 2.0, 2.2));
+      applyCameraRange();
+      controls.snap();
+      man.object.visible = false;
+      frameLoop.invalidate();
+      return;
+    }
     if (!['air', 'fire', 'earth'].includes(name)) return;
     setRoutine(name);
     setView('full');
@@ -763,6 +841,7 @@ if (__AUTHOR__) {
     setQuality,
     setRate: (v: number) => (transport.rate = v),
     practice: (clip: Cue['clip'] | null) => {
+      leaveAltarStudy();
       preview = clip;
       previewAt = 0;
       transport.playing = false;
@@ -837,16 +916,10 @@ async function frame(elapsed: number): Promise<boolean> {
         walker.state.position.x,
         walker.state.position.z,
       ]);
-      walker.step(direction[0], direction[1], dt, cue.mobility, score);
-      // The scripted look-around steers him the way a held key would, on the spot.
-      const look = playerDriving(t)
-        ? null
-        : lookHeading(
-            t,
-            score,
-            journeyHeading(journey, score, [walker.state.position.x, walker.state.position.z]),
-          );
-      if (look !== null) walker.turn(look, dt, ...lookTurn(score));
+      walker.step(direction[0], direction[1], dt, cue.mobility, score, playerDriving(t));
+      if (!playerDriving(t))
+        walker.look(t + dt, score,
+          journeyHeading(journey, score, [walker.state.position.x, walker.state.position.z]));
       contacts.update(walker.state);
       desert.field.update(dt);
       t += dt;
@@ -883,6 +956,8 @@ async function frame(elapsed: number): Promise<boolean> {
       : 0;
   visualTime += effectsDt;
   man.update(walker.state, cue, score, visualTime, effectsDt, advance);
+  man.object.visible = !(__AUTHOR__ && altarStudy);
+  const landings = contacts.updatePose(walker.state, man.feet, advance);
   desert.setContacts(man.contacts);
   // A knee presses a deeper, smaller pit than a footstep, right under the joint
   // that carries the weight. Each part prints once per pose, as it comes down,
@@ -917,7 +992,17 @@ async function frame(elapsed: number): Promise<boolean> {
     walker.state.position.y + aimHeight,
     walker.state.position.z,
   );
-  const shot = cameraDirector.update(
+  // Stills only, and only in Studio: shifting what the camera aims at takes him
+  // off the middle of the frame, which is the one composition the piece itself
+  // never uses. Across the frame is read off the camera, so the nudge means the
+  // same thing from any angle.
+  if (__AUTHOR__ && (stills.offset.x || stills.offset.y)) {
+    across.setFromMatrixColumn(camera.matrixWorld, 0).setY(0).normalize();
+    target.addScaledVector(across, stills.offset.x);
+    target.y += stills.offset.y;
+  }
+  if (__AUTHOR__ && altarStudy) target.copy(altarStudy);
+  const shot = __AUTHOR__ && altarStudy ? undefined : cameraDirector.update(
     transport.time,
     Math.min(advance, 0.1),
     score,
@@ -927,7 +1012,7 @@ async function frame(elapsed: number): Promise<boolean> {
     revealAngle(),
     playerDriving(),
   );
-  follow.update(target, Math.min(realDt, 0.1), true, orientShot(shot));
+  follow.update(target, Math.min(realDt, 0.1), true, shot ? orientShot(shot) : undefined);
   // The piece is finished with the sun a third of an hour after it started, and
   // the score's clock stops there. The sky need not. Left open, it goes on
   // turning at the rate the piece itself used, easing up to it the way the
@@ -960,6 +1045,7 @@ async function frame(elapsed: number): Promise<boolean> {
     !document.hidden && (transport.playing || (cue.ended && !scrubbed)),
     score,
     {x: walker.state.position.x, z: walker.state.position.z, ground: desert.field.height},
+    walker.state.gesture ? landings : undefined,
   );
   syncTime += realDt;
   if (syncTime > 0.3) {
@@ -981,6 +1067,7 @@ async function frame(elapsed: number): Promise<boolean> {
     graphicsPending = true;
   return (
     graphicsPending ||
+    (__AUTHOR__ && performance.now() - framedAt < 1400) ||
     transport.playing ||
     (cue.ended && !scrubbed) ||
     preview !== null ||
@@ -1001,6 +1088,7 @@ window.addEventListener('pagehide', (event) => {
   abort.abort();
   audio.dispose();
   man.dispose();
+  fallen.dispose();
   controls.dispose();
   desert.dispose();
   sea.dispose();

@@ -48,12 +48,13 @@ for (const p of built) {
   }
 }
 assert.deepEqual(
-  built.filter((p) => p.endsWith('.glb')),
-  ['docs/character/man.glb'],
+  built.filter((p) => p.endsWith('.glb')).sort(),
+  ['docs/character/fallen.glb', 'docs/character/man.glb'],
 );
-assert.equal(built.filter((p) => p.startsWith('docs/animations/')).length, 1);
+assert.deepEqual(built.filter((p) => p.startsWith('docs/animations/')).sort(),
+  ['docs/animations/clips.bin', 'docs/animations/locomotion.bin']);
 assert.ok((await stat('docs/character/body-detail.bin')).size > 16);
 assert.ok((await stat('docs/character/man.glb')).size > 1_000_000);
 console.log(
-  'Release audit passed: one body, one animation pack, no author panel or source maps.',
+  'Release audit passed: animated body, static tribute, two animation packs, no author panel or source maps.',
 );

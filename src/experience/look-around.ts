@@ -1,4 +1,6 @@
 import type {Score} from './score';
+import profiles from '../character/locomotion-data.json';
+import {motionAt} from '../character/manual-gait';
 
 /** Before the first knee fall he stops and looks about, exactly the way a viewer
  * would swing him with A or D: a quarter turn, a long look that way, and again,
@@ -11,19 +13,9 @@ const QUARTERS = 4;
 export const LOOK_PIVOT = 2;
 export const LOOK_HOLD = 5;
 export const LOOK_SECONDS = QUARTERS * (LOOK_PIVOT + LOOK_HOLD);
-/** The bounded pivot's approach rate and ceiling at the default pivot time,
- * about fifty degrees a second at its quickest instead of the walk's three
- * hundred. A longer pivot turns him proportionally slower. */
-export const LOOK_TURN_RATE = 6;
-export const LOOK_TURN_LIMIT = 0.85;
 export const lookPivot = (score: Score) => score.stage_04_look_pivot ?? LOOK_PIVOT;
 export const lookHold = (score: Score) => score.stage_04_look_hold ?? LOOK_HOLD;
 export const lookSeconds = (score: Score) => QUARTERS * (lookPivot(score) + lookHold(score));
-/** The turn rate and per-frame ceiling that settle a quarter in lookPivot seconds. */
-export function lookTurn(score: Score): [rate: number, limit: number] {
-  const k = LOOK_PIVOT / Math.max(0.25, lookPivot(score));
-  return [LOOK_TURN_RATE * k, LOOK_TURN_LIMIT * k];
-}
 /** The camera swings on its own slower curve, so the horizon turns rather than
  * snaps, and it starts moving while he is still slowing to a stop. */
 const SWING = 2.8;
@@ -68,6 +60,24 @@ export function lookHeading(time: number, score: Score, walking: readonly [numbe
   const quarters = lookQuarters(time, score);
   if (quarters === null || Math.hypot(walking[0], walking[1]) === 0) return null;
   return Math.atan2(walking[0], walking[1]) + (quarters * Math.PI) / 2;
+}
+
+/** Sample both the captured footwork and its removed root yaw on the score
+ * clock. The four turns keep their authored slots, including holds and seeks. */
+export function sampleLook(time: number, score: Score, walking: readonly [number, number]) {
+  const target = lookHeading(time, score, walking);
+  if (target === null) return null;
+  const quarter = lookQuarters(time, score)! - 1;
+  const within = Math.max(0, time - lookStart(score) - quarter * lookSpan(score) / QUARTERS);
+  const pivot = lookPivot(score);
+  const clipTime = Math.min(1, within / pivot) * profiles.turnleft90.duration;
+  return {
+    facing: target - Math.PI / 2 + motionAt('turnleft90', clipTime) * Math.PI / 2,
+    intent: target,
+    gesture: within < pivot
+      ? {clip: 'turnleft90', time: clipTime}
+      : {clip: 'idleweight', time: within - pivot},
+  };
 }
 
 /** The same staircase, eased and lagging, for the camera to ride round with him.

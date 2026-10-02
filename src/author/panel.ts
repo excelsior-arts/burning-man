@@ -106,7 +106,7 @@ export function mountAuthor(host: Host) {
   panel.setAttribute('aria-label', 'Experience authoring studio');
   panel.innerHTML = `
  <header><span class="studio-kicker">BURNING MAN / AUTHORING</span><h2>Shape the experience.</h2><p>These controls are removed from a release build.</p></header>
- <section><h3>Altar shortcuts</h3><div class="studio-actions"><button data-jump="air" aria-keyshortcuts="Shift+1">Air · ⇧1</button><button data-jump="fire" aria-keyshortcuts="Shift+2">Fire · ⇧2</button><button data-jump="earth" aria-keyshortcuts="Shift+3">Earth · ⇧3</button></div><p>Jump straight to a discovery, paused just before the final fall. Drag to inspect, or resume to play the ending. Shortcuts also work with Studio hidden.</p></section>
+ <section><h3>Altar shortcuts</h3><div class="studio-actions"><button data-jump="air" aria-keyshortcuts="Shift+1">Air · ⇧1</button><button data-jump="fire" aria-keyshortcuts="Shift+2">Fire · ⇧2</button><button data-jump="earth" aria-keyshortcuts="Shift+3">Earth · ⇧3</button><button data-jump="fallen" aria-keyshortcuts="Shift+4">The fallen one · ⇧4</button></div><p>Jump to an elemental ending, or inspect the fallen one behind the left playa hump. Drag to look around; resume to walk from nearby. Shortcuts also work with Studio hidden.</p></section>
  <section><h3>Movement study</h3><div class="studio-actions"><button id="face-view">Face detail</button><button id="full-view">Whole body</button></div><label>Walking routine<select id="routine"><option value="story">Scripted ocean walk + WASD takeover</option><option value="keyboard">Manual only · WASD study</option><option value="coast">Continuous walk toward sea</option><option value="air">North passage · Air reveal</option><option value="fire">South passage · Fire reveal</option><option value="earth">Eastern dune · Earth reveal</option><option value="circle">Circle</option><option value="still">Remain still</option></select></label>
  <div id="transport-speed"></div><label>Pose practice<select id="practice"><option value="">Follow the score</option><option value="opening">Arms open · unlit</option><option value="kneefall">Fall onto knees</option><option value="kneeling">Knees · ready to rise</option><option value="settle">Settle onto heels · final</option><option value="standup">Rise from knees</option></select></label><p>WASD moves relative to the camera. Dragging or zooming only changes the camera; it returns gently to side views when left alone.</p><p>Choose a route, then scrub the timeline to rehearse its reveal. The public walk always starts toward the sea.</p><p id="route-status"></p><p id="reveal-status"></p><button id="calibrate">Calibrate walking pace for the beach</button></section>
  <section><h3>Graphics budget</h3><label>Quality<select id="graphics-quality"><option value="auto">Auto</option><option value="high">High · 60 fps</option><option value="balanced">Balanced · 30 fps</option><option value="low">Low · 30 fps</option></select></label><p id="graphics-status"></p><p>Balanced is High's picture at half the cadence; Low is the reduced picture. Auto starts balanced and steps down after sustained slow frames. Re-select Auto to retry; graphics never change the music or walking speed.</p></section>
@@ -300,9 +300,9 @@ export function mountAuthor(host: Host) {
   toggle.onclick = toggleStudio;
   const jump = (name: string) => {
     host.jumpToAltar(name);
-    $<HTMLSelectElement>('#routine').value = name;
+    $<HTMLSelectElement>('#routine').value = name === 'fallen' ? 'keyboard' : name;
     reflect();
-    message(`Paused at ${name} discovery.`);
+    message(name === 'fallen' ? 'The fallen one · a tribute. Drag to inspect.' : `Paused at ${name} discovery.`);
   };
   for (const button of panel.querySelectorAll<HTMLButtonElement>('[data-jump]'))
     button.onclick = () => jump(button.dataset.jump!);
@@ -319,7 +319,7 @@ export function mountAuthor(host: Host) {
       (e.target instanceof HTMLElement && e.target.isContentEditable)
     )
       return;
-    const name = ({Digit1: 'air', Digit2: 'fire', Digit3: 'earth'} as Record<string, string>)[
+    const name = ({Digit1: 'air', Digit2: 'fire', Digit3: 'earth', Digit4: 'fallen'} as Record<string, string>)[
       e.code
     ];
     if (e.shiftKey && name) {
